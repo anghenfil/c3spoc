@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::process;
 use std::sync::atomic::AtomicU32;
 use std::sync::{Arc, RwLock};
-use image::{DynamicImage, GrayImage};
+use image::GrayImage;
 use rocket::tokio;
 
 #[macro_use] extern crate rocket;
@@ -144,5 +144,5 @@ pub async fn rocket() -> _ {
         }
     });
 
-    rocket::build().mount("/", routes![index, api::add_image_to_queue]).manage(queue.clone())
+    rocket::build().mount("/", routes![index, api::add_image_to_queue, api::add_text_to_queue]).manage(queue.clone())
 }

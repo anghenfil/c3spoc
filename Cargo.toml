@@ -9,6 +9,8 @@ edition = "2021"
 brother-ql-rs = {git = "https://github.com/anghenfil/brother-ql-rs.git"}
 rocket = { version = "0.5.0", features = ["json"] }
 image = "0.24.7"
+imageproc = "0.23.0"
+rusttype = "0.9.3"
 serde = { version = "1.0.193", features = ["derive"] }
 rusb = "0.5"
 tokio = { version = "1.35.1", features = ["full"] }
