@@ -2,6 +2,7 @@ use imageproc::drawing::draw_text_mut;
 use rusttype::Scale;
 use rusttype::Font;
 use brother_ql_rs::printer;
+use brother_ql_rs::printer::status::Response;
 use brother_ql_rs::printer::ThermalPrinter;
 use image::{DynamicImage, GrayImage, Luma};
 use imageproc::drawing::text_size;
@@ -24,7 +25,7 @@ pub fn initial_printer() -> Result<ThermalPrinter<rusb::GlobalContext>, ()>{
 
 pub fn print_image(image: &GrayImage, printer: &ThermalPrinter<rusb::GlobalContext>) -> brother_ql_rs::printer::Result<()> {
     let rasterized = rasterise_image(image).unwrap();
-    printer.print_blocking(rasterized)
+    printer.print_blocking(rasterized, 10)
 }
 
 pub enum FontVariants{
@@ -73,7 +74,7 @@ impl FontVariants{
             FontVariants::ArialBoldItalic => {
                 let font = Vec::from(include_bytes!("../fonts/arialbi.ttf") as &[u8]);
                 Font::try_from_vec(font).unwrap()
-            }
+            },
         }
     }
 }

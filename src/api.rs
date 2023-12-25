@@ -1,4 +1,4 @@
-use crate::{PrintData, PrintQueue};
+use crate::{PrintJob, PrintQueue};
 use rocket::State;
 use serde::{Serialize, Deserialize};
 use rocket::serde::json::Json;
@@ -24,6 +24,7 @@ pub enum ApiError{
     LengthTooLong,
     QuantityTooHigh,
     QueueTooFull,
+    UnknownFont,
 }
 
 #[derive(FromForm)]
@@ -31,6 +32,7 @@ pub struct PrintJobImageRequest<'a>{
     pub image: TempFile<'a>,
     pub quantity: Option<u32>,
     pub rotate: Option<bool>,
+    pub dither: Option<bool>,
 }
 
 #[derive(FromForm)]
@@ -40,20 +42,61 @@ pub struct PrintJobTextRequest{
     pub invert: Option<bool>,
     pub length: u32,
     pub rotate: Option<bool>,
+    pub font: Option<String>
 }
 
-/// Get the current print queue
-///
-/// # Arguments
-/// * `status` - Optional filter for the print queue ('pending', 'printing', 'complete', 'failed')
-#[get("/queue?<status>")]
-pub fn get_print_queue(status: Option<String>){
+#[derive(Serialize)]
+pub struct ApiQueueList{
+    pub jobs_todo: Vec<PrintJob>,
+    pub jobs_finished_or_failed: Vec<PrintJob>,
+}
 
+/// Get the current print queue as JSON
+#[get("/queue")]
+pub fn get_print_queue(print_queue: &State<Arc<PrintQueue>>) -> Json<ApiQueueList>{
+    Json(ApiQueueList{
+        jobs_todo: print_queue.jobs_todo.read().unwrap().clone().iter().map(|job| job.clone()).collect::<Vec<PrintJob>>(),
+        jobs_finished_or_failed: print_queue.jobs_other.read().unwrap().clone().iter().map(|job| job.clone()).collect::<Vec<PrintJob>>(),
+    })
+}
+
+#[get("/queue/<id>")]
+pub fn get_print_job(id: u32, print_queue: &State<Arc<PrintQueue>>) -> Option<Json<PrintJob>>{
+    let jobs_todo = print_queue.jobs_todo.read().unwrap();
+    let jobs_other = print_queue.jobs_other.read().unwrap();
+
+    for job in jobs_todo.iter(){
+        if job.id == id{
+            return Some(Json(job.clone()))
+        }
+    }
+
+    for job in jobs_other.iter(){
+        if job.id == id{
+            return Some(Json(job.clone()))
+        }
+    }
+
+    None
 }
 
 #[post("/print/text", data="<data>")]
 pub async fn add_text_to_queue(data: Form<PrintJobTextRequest>, queue: &State<Arc<PrintQueue>>) -> Json<PrintJobResponse> {
     let data = data.into_inner();
+
+    println!("Adding text to queue: {}", data.text.clone());
+
+    let font = match data.font{
+        Some(font) => {
+            match FontVariants::from_str(&font) {
+                Some(font) => font,
+                None => return Json(PrintJobResponse{ id: None, error: Some(ApiError::UnknownFont) })
+            }
+        },
+        None => {
+            FontVariants::Arial
+        }
+    };
 
     if data.quantity.unwrap_or(1) > 10{
         return Json(PrintJobResponse{ id: None, error: Some(ApiError::QuantityTooHigh) })
@@ -69,7 +112,7 @@ pub async fn add_text_to_queue(data: Form<PrintJobTextRequest>, queue: &State<Ar
 
     let pixel_length = (11.3548387097 * data.length as f32) as u32;
 
-    let image = match text_to_image(data.text, pixel_length, data.rotate.unwrap_or(false), data.invert.unwrap_or(false), FontVariants::Arial){
+    let image = match text_to_image(data.text, pixel_length, data.rotate.unwrap_or(true), data.invert.unwrap_or(false), font){
         Ok(image) => image,
         Err(_) => return Json(PrintJobResponse{ id: None, error: Some(ApiError::InvalidRequest) })
     };
@@ -77,7 +120,7 @@ pub async fn add_text_to_queue(data: Form<PrintJobTextRequest>, queue: &State<Ar
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
 
     println!("Adding job to queue.");
-    let id = queue.add_job(now, PrintData::Image(image.clone()), data.quantity.unwrap_or(1));
+    let id = queue.add_job(now, image.clone(), data.quantity.unwrap_or(1));
 
     println!("Added new job {} to queue", id);
 
@@ -129,25 +172,29 @@ pub async fn add_image_to_queue(data: Form<PrintJobImageRequest<'_>>, queue: &St
         if let Some(rotate) = data.rotate{
             if rotate{
                 image = image.rotate90();
+                println!("Rotated image.");
             }
         }
 
+        println!("Old image dimensions are {} x {}", image.width(), image.height());
+        let height_diff = 704.0 / image.height() as f32;
+        println!("Height difference is {}", height_diff);
         let nheight : u32 = 704; //704 px ~= 62mm
+        let nwidth = (image.width() as f32 *height_diff).round() as u32;
 
-        let nwidth = image.height();
+        println!("Resizing image: {} x {}", nwidth, nheight);
 
-        println!("Resizing image.");
 
-        image = image.resize(nwidth, nheight, image::imageops::FilterType::Triangle);
+        image = image.resize_exact(nwidth, nheight, image::imageops::FilterType::Triangle);
 
-        println!("Converting to grayscale.");
-        image = image.grayscale();
-
-        println!("New image dimensions are {} x {}", image.width(), image.height());
-
-        let image = image.into_luma8();
-
-        Ok(image)
+        if data.dither.unwrap_or(true) {
+            let mut image = image.into_luma8();
+            image::imageops::dither(&mut image, &image::imageops::colorops::BiLevel);
+            Ok(image)
+        }else{
+            image.grayscale();
+            Ok(image.into_luma8())
+        }
     }).await.unwrap();
 
     let image = match processing_res{
@@ -158,7 +205,7 @@ pub async fn add_image_to_queue(data: Form<PrintJobImageRequest<'_>>, queue: &St
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
 
     println!("Adding job to queue.");
-    let id = queue.add_job(now, PrintData::Image(image.clone()), quantity);
+    let id = queue.add_job(now, image.clone(), quantity);
 
     println!("Added new job {} to queue", id);
 

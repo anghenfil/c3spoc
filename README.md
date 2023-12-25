@@ -3,40 +3,39 @@ This is the software the c3spoc - the Sticker Printer Operation Center - is usin
 # Quick Start
 Print a single image:<br>
 ```curl -v -F image=@<filepath> http://<ip>/print/image```<br>
-Print a single image with a length of 100mm:<br>
-```curl -v -F image=@<filepath> -F length=100 http://<ip>/print/image```<br>
+Print two images, rotate to landscape mode, dither image 
+```curl -v -F quantity=2 -F rotate=true -F dither=true -F image=@Bilder/Sticker/fairydust.jpg http://<ip>/print/image```<br>
+Print a white multiline text on black background with a length of 20 mm in the Gabriella Heavy font:<br>
+```curl -v -F text=$'anghenfil\n 2644' -F quantity=1 -F invert=true -F length=20 -F font="GabriellaHeavy" http://<ip>/print/text```<br>
 
 # API Specification
-### GET /queue?status=\<status\>
-#### Arguments:
-* status (optional): "pending", "printing", "printed", "failed", "all" (default: pending)<br>
-Returns a list of all jobs in the queue. The list is sorted by the time the jobs were added to the queue.
-```json
-[ 
-  {
-    "id": 1,
-    "timestamp": "2018-12-27T15:00:00Z",
-    "status": "pending",
-    "quantity": 1
-  },
-  {
-    "id": 2,
-    "timestamp": "2018-12-27T15:00:00Z",
-    "status": "printing",
-    "quantity": 10
-  }
-]
-```
+### GET /queue
+#### Example Result
+```{"jobs_todo":[],"jobs_finished_or_failed":[{"id":1,"timestamp":1703544640,"quantity":1,"status":"Complete"},{"id":2,"timestamp":1703544697,"quantity":1,"status":"Complete"},{"id":3,"timestamp":1703544777,"quantity":1,"status":"Failed"}]}```
 ### GET /queue/\<id\>
+#### Arguments:
+* id: ID of the job to get
+#### Example Result
+```{"id":1,"timestamp":1703544640,"quantity":1,"status":"Complete"}```
 ### POST /print/image
 #### Arguments:
 * quantity (optional): Number of stickers to print (default: 1, current max 10)
-* image: jpg or png image to print on the sticker
-* length (optional): Length of the Sticker in mm (width is fixed at 62mm), if not set the image will be scaled to fit the width
-* rotate (optional, true or false): Rotate the image by 90° clockwise
+* image: jpg or png image to print on the sticker, will be resized to match the printer dimensions
+* rotate (optional, bool): Rotate the image by 90° clockwise if true
+* dither (optional, bool, default true): Dither the image to black and white if true, otherwise convert to b/w by thresholding
 ### POST /print/text
 #### Arguments:
 * quantity (optional): Number of stickers to print (default: 1, current max 10)
-* text: Text to print on the sticker
-* length: Length of the Sticker in mm (width is fixed at 62mm)
+* text: Text to print on the sticker, you may use \n for newlines
+* invert (optional, bool): Prints white text on black background if true. Please note that there will be a white border 
+* length: maximum length of the Sticker in mm (width is fixed at 62mm)
+* rotate (optional, bool, default true): Rotate the image by 90° clockwise (portrait mode = smaller stickers) if true
+* font (optional, String, default Arial) Font to use for printing
+    * Gabriella Heavy (37c3 Font): "GabriellaHeavy"
+    * Mono Sans: "MonoSans"
+    * Arial: "Arial"
+    * Arial Bold: "ArialBold"
+    * Arial Italic: "ArialItalic"
+    * Arial Bold Italic: "ArialBoldItalic"
+    * request more fonts by opening an issue
 ### DELETE /queue (admin only)
