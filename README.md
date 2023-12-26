@@ -39,3 +39,10 @@ Print a white multiline text on black background with a length of 20 mm in the G
     * Arial Bold Italic: "ArialBoldItalic"
     * request more fonts by opening an issue
 ### DELETE /queue (admin only)
+
+
+# Known Issues
+## UTF-8 Emojis not working
+Unfortunately, I couldn't get many UTF-8 Glyphs to work for the /print/text endpoint, althrough I tried merging Emoji Fonts into the font files. If you know how to fix this, please open an issue or pull request.
+
+For now, create the image with your content yourself and send the image to the API.
