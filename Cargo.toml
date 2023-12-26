@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 brother-ql-rs = {git = "https://github.com/anghenfil/brother-ql-rs.git"}
-rocket = { version = "0.5.0", features = ["json"] }
+rocket = { version = "0.5.0", features = ["json", "tls"] }
 image = "0.24.7"
 imageproc = "0.23.0"
 rusttype = "0.9.3"
