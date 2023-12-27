@@ -1,3 +1,16 @@
 [default.tls]
-key = "path/to/key.pem"
-cert = "path/to/cert.pem"
+key = "privkey.pem"
+certs = "fullchain.pem"
+
+[default]
+address = "::"
+limits = { form = "64 kB", json = "1 MiB" }
+port = 443
+
+[debug]
+address = "127.0.0.1"
+port = 8000
+
+[debug.tls]
+key = "privatekey.pem"
+certs = "certificate.pem"

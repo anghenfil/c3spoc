@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>c3spoc</title>
+</head>
+<body>
+<h1>How to use</h1>
+<p>Visit <a href="https://github.com/anghenfil/c3spoc">GitHub</a> to learn how to use the API. Alternatively use the web uploader below:</p>
+<h1>Print Image</h1>
+<form action="/print/image" method="post" enctype="multipart/form-data">
+    <label for="image">Image:</label>
+    <input type="file" id="image" name="image" accept="image/*">
+    <label for="quantity">Quantity:</label>
+    <input type="number" name="quantity" id="quantity" max="10" min="1" value="1">
+    <label for="rotate">Rotate:</label>
+    <input type="checkbox" name="rotate" id="rotate">Rotate</input>
+    <label for="dither">Dither:</label>
+    <input type="checkbox" name="dither" id="dither" checked>Dither</input>
+    <input type="submit" value="Upload">
+</form>
+<h1>Print Text</h1>
+<form action="/print/text" method="post" enctype="multipart/form-data">
+    <label for="text">Text to print:</label><br>
+    <textarea id="text" name="text" rows="4" cols="50"></textarea><br>
+    <label for="length">Max Label Length in mm:</label>
+    <input type="number" name="length" id="length" max="500" min="10" value="20">
+    <label for="quantity2">Quantity:</label>
+    <input type="number" name="quantity" id="quantity2" max="10" min="1" value="1">
+    <label for="rotate2">Rotate:</label>
+    <input type="checkbox" name="rotate" id="rotate2" checked>Rotate</input>
+    <input type="submit" value="Upload">
+</form>
+</body>
+</html>

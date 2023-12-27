@@ -1,8 +1,11 @@
 use std::collections::VecDeque;
+use std::path::Path;
 use std::process;
 use std::sync::atomic::AtomicU32;
 use std::sync::{Arc, RwLock};
 use image::GrayImage;
+use rocket::fs::{NamedFile, relative};
+use rocket::response::content::RawHtml;
 use rocket::tokio;
 use serde::Serialize;
 
@@ -67,14 +70,16 @@ pub enum PrintData {
 
 
 #[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+pub async fn index() -> NamedFile {
+    let mut path = Path::new("static/index.html");
+    NamedFile::open(path).await.unwrap()
 }
 
 #[launch]
 pub async fn rocket() -> _ {
     let queue = Arc::new(PrintQueue::new());
     let printing_queue = queue.clone();
+
 
     tokio::spawn(async move {
         //TODO recover from printer errors

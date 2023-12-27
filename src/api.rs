@@ -7,7 +7,7 @@ use rocket::form::Form;
 use rocket::tokio::io::AsyncReadExt;
 use std::io::Cursor;
 use std::sync::Arc;
-use image::GrayImage;
+use image::{GrayImage, ImageFormat};
 use crate::printer::{FontVariants, text_to_image};
 
 #[derive(Serialize, Deserialize)]
@@ -159,7 +159,7 @@ pub async fn add_image_to_queue(data: Form<PrintJobImageRequest<'_>>, queue: &St
 
     let processing_res : Result<GrayImage, Json<PrintJobResponse>>= tokio::task::spawn_blocking(move || {
         println!("Parsing image file.");
-        let reader = match image::io::Reader::new(Cursor::new(buf.as_slice())).with_guessed_format(){
+        let mut reader = match image::io::Reader::new(Cursor::new(buf.as_slice())).with_guessed_format(){
             Ok(reader) => reader,
             Err(e) =>
                 {
@@ -170,7 +170,10 @@ pub async fn add_image_to_queue(data: Form<PrintJobImageRequest<'_>>, queue: &St
         println!("Decoding image file.");
         let mut image = match reader.decode(){
             Ok(image) => image,
-            Err(_) => return Err(Json(PrintJobResponse{ id: None, error: Some(ApiError::InvalidImageFile) }))
+            Err(e) => {
+                println!("Couldn't decode image: {}", e);
+                return Err(Json(PrintJobResponse{ id: None, error: Some(ApiError::InvalidImageFile) }))
+            }
         };
         println!("Rotating image if necessarry");
         if let Some(rotate) = data.rotate{
