@@ -4,7 +4,7 @@ certs = "fullchain.pem"
 
 [default]
 address = "::"
-limits = { form = "64 kB", json = "1 MiB" }
+limits = { form = "10 MiB", json = "1 MiB" }
 port = 443
 
 [debug]
