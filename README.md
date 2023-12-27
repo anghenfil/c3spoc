@@ -1,6 +1,8 @@
 This is the software the c3spoc - the Sticker Printer Operation Center - is using to prive an API for printing stickers.
 
 # Quick Start
+Visit https://c3spoc.de for a simple way to print things.
+
 Print a single image:<br>
 ```curl -v -F image=@<filepath> https://c3spoc.de/print/image```<br>
 Print two images, rotate to landscape mode, dither image 
@@ -29,7 +31,7 @@ Print a white multiline text on black background with a length of 20 mm in the G
 * text: Text to print on the sticker, you may use \n for newlines
 * invert (optional, bool): Prints white text on black background if true. Please note that there will be a white border 
 * length: maximum length of the Sticker in mm (width is fixed at 62mm)
-* rotate (optional, bool, default true): Rotate the image by 90° clockwise (portrait mode = smaller stickers) if true
+* rotate (optional, bool, default false): Rotate the image by 90° clockwise (portrait mode = smaller stickers) if true
 * font (optional, String, default Arial) Font to use for printing
     * Gabriella Heavy (37c3 Font): "GabriellaHeavy"
     * Mono Sans: "MonoSans"

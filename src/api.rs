@@ -112,7 +112,7 @@ pub async fn add_text_to_queue(data: Form<PrintJobTextRequest>, queue: &State<Ar
 
     let pixel_length = (11.3548387097 * data.length as f32) as u32;
 
-    let image = match text_to_image(data.text, pixel_length, data.rotate.unwrap_or(true), data.invert.unwrap_or(false), font){
+    let image = match text_to_image(data.text, pixel_length, data.rotate.unwrap_or(false), data.invert.unwrap_or(false), font){
         Ok(image) => image,
         Err(_) => return Json(PrintJobResponse{ id: None, error: Some(ApiError::InvalidRequest) })
     };
