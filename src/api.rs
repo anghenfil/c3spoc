@@ -161,7 +161,11 @@ pub async fn add_image_to_queue(data: Form<PrintJobImageRequest<'_>>, queue: &St
         println!("Parsing image file.");
         let reader = match image::io::Reader::new(Cursor::new(buf.as_slice())).with_guessed_format(){
             Ok(reader) => reader,
-            Err(_) => return Err(Json(PrintJobResponse{ id: None, error: Some(ApiError::InvalidImageFile) }))
+            Err(e) =>
+                {
+                    println!("{}", e);
+                    return Err(Json(PrintJobResponse { id: None, error: Some(ApiError::InvalidImageFile) }))
+                }
         };
         println!("Decoding image file.");
         let mut image = match reader.decode(){
