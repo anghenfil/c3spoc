@@ -2,11 +2,11 @@ This is the software the c3spoc - the Sticker Printer Operation Center - is usin
 
 # Quick Start
 Print a single image:<br>
-```curl -v -F image=@<filepath> https://c3spoc.de:8000/print/image```<br>
+```curl -v -F image=@<filepath> https://c3spoc.de/print/image```<br>
 Print two images, rotate to landscape mode, dither image 
-```curl -v -F quantity=2 -F rotate=true -F dither=true -F image=@Bilder/Sticker/fairydust.jpg https://c3spoc.de:8000/print/image```<br>
+```curl -v -F quantity=2 -F rotate=true -F dither=true -F image=@Bilder/Sticker/fairydust.jpg https://c3spoc.de/print/image```<br>
 Print a white multiline text on black background with a length of 20 mm in the Gabriella Heavy font:<br>
-```curl -v -F text=$'anghenfil\n 2644' -F quantity=1 -F invert=true -F length=20 -F font="GabriellaHeavy" https://c3spoc.de:8000/print/text```<br>
+```curl -v -F text=$'anghenfil\n 2644' -F quantity=1 -F invert=true -F length=20 -F font="GabriellaHeavy" https://c3spoc.de/print/text```<br>
 
 # API Specification
 ### GET /queue
